@@ -1,7 +1,7 @@
 var gulp = require('gulp'),
     git = require('gulp-git'),
     merge = require('merge-stream'),
-    codePath = 'd:\\gitCode\\qyd\\deploy\\p2p\\src\\main\\webapp\\',// 【\】需要转译
+    codePath = 'd:\\gitCodeM\\qyd\\deploy\\p2p\\src\\main\\webapp\\',// 【\】需要转译
     outFolder = 'e:\\build',
     outputPath = [],
     files = [];
@@ -18,9 +18,9 @@ gulp.task('init', function () {
 gulp.task('status', function (cb) {
     return git.status({ cwd: codePath }, function (err, stdout) {
         if (err) throw err;
-        files = stdout.match(/modified:(.)*/g);
+        files = stdout.match(/modified:(.)*/g).concat(stdout.match(/new file:(.)*/g));
         files = files.map(function (item) {
-            return codePath + item.replace("modified:", '').replace(/\//g, "\\").trim();
+            return codePath + item.replace("modified:", '').replace("new file:", '').replace(/\//g, "\\").trim();
         });
         cb(err);
     });
