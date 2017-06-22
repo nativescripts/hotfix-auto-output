@@ -1,10 +1,16 @@
 var gulp = require('gulp'),
     git = require('gulp-git'),
     merge = require('merge-stream'),
-    codePath = 'd:\\gitCodeM\\qyd\\deploy\\p2p\\src\\main\\webapp\\',// 【\】需要转译
+    zip = require('gulp-zip');
+
+var codePath = 'd:\\gitStatic\\static\\',// 【\】需要转译
     outFolder = 'e:\\build',
-    outputPath = [],
-    files = [];
+    files = [],
+    outputPath = [
+        outFolder,
+        new Date().toLocaleDateString(),
+        "ROOT"
+    ];
 
 // Run git init
 // src is the root folder for git to initialize
@@ -18,9 +24,9 @@ gulp.task('init', function () {
 gulp.task('status', function (cb) {
     return git.status({ cwd: codePath }, function (err, stdout) {
         if (err) throw err;
-        files = stdout.match(/modified:(.)*/g).concat(stdout.match(/new file:(.)*/g));
+        files = stdout.match(/modified:(.)*|new file:(.)*/g);
         files = files.map(function (item) {
-            return codePath + item.replace("modified:", '').replace("new file:", '').replace(/\//g, "\\").trim();
+            return codePath + item.replace(/modified:|new file:/, '').replace(/\//g, "\\").trim();
         });
         cb(err);
     });
@@ -28,11 +34,6 @@ gulp.task('status', function (cb) {
 
 // copy
 gulp.task("copy", ["status"], function () {
-    outputPath = [
-        outFolder,
-        new Date().toLocaleDateString(),
-        "ROOT"
-    ];
     var tasks = files.map(function (file) {
         var output = outputPath.join('\\');
         output += '\\' + file.replace(codePath, '').split("\\").slice(0, file.replace(codePath, '').split("\\").length - 1).join("\\");
@@ -43,5 +44,13 @@ gulp.task("copy", ["status"], function () {
     return merge(tasks);
 });
 
+// zip
+gulp.task("zip", ["copy"], function () {
+    console.log(outputPath.join('\\'));
+    return gulp.src(outputPath.join('\\') + '\\**')
+        .pipe(zip('ROOT.zip'))
+        .pipe(gulp.dest(outputPath.slice(0,2).join('\\')));
+});
+
 // default
-gulp.task("default", ["init", "status", "copy"]);
+gulp.task("default", ["init", "status", "copy", "zip"]);
